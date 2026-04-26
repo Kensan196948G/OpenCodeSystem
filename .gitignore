@@ -1,0 +1,3 @@
+state/pid.txt
+logs/*.log
+.DS_Store
