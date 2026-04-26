@@ -285,13 +285,38 @@ while true; do
         read -r sub
         case "$sub" in
           1)
-             echo "  曜日を選択:"
+             echo "  曜日を選択（複数可: 1,3,5 または 1-5 または 1 2 3）:"
              echo "    1=月 2=火 3=水 4=木 5=金 6=土"
+             echo "    例: 1,3,5 → 月水金   1-5 → 月-金"
              echo -n "  番号: "
-             read -r dow_num
-             if [[ ! "$dow_num" =~ ^[1-6]$ ]]; then
-               echo "  不正な入力です (1-6)"
-               sleep 1; continue
+             read -r dow_input
+             # 入力を展開して配列に
+             dow_list=()
+             # カンマ区切り対応
+		 if [[ "$dow_input" == *-* ]]; then
+               # 範囲指定 (例: 1-5)
+               start=$(echo "$dow_input" | cut -d'-' -f1)
+               end=$(echo "$dow_input" | cut -d'-' -f2)
+               for d in $(seq "$start" "$end"); do
+                 dow_list+=("$d")
+               done
+             else
+               # カンマ・スペース区切り
+               IFS=', ' read -ra parts <<< "$dow_input"
+               for d in "${parts[@]}"; do
+                 d=$(echo "$d" | xargs)
+                 [ -n "$d" ] && dow_list+=("$d")
+               done
+             fi
+             # バリデーション
+             valid=true
+             for d in "${dow_list[@]}"; do
+               if [[ ! "$d" =~ ^[1-6]$ ]]; then
+                 valid=false; break
+               fi
+             done
+             if ! $valid || [ ${#dow_list[@]} -eq 0 ]; then
+               echo "  不正な入力です"; sleep 1; continue
              fi
              PROJECT_LIST=(); TOTAL_PROJECTS=0
              echo "  プロジェクト:"
@@ -299,18 +324,35 @@ while true; do
              if [ "$TOTAL_PROJECTS" -eq 0 ]; then
                sleep 1; continue
              fi
-             echo -n "  番号: "
-             read -r del
-             if [[ ! "$del" =~ ^[0-9]+$ ]] || [ "$del" -lt 1 ] || [ "$del" -gt "${#CRON_PROJECTS[@]}" ]; then
-               echo "  不正な入力です"; sleep 1; continue
-             fi
-            unset "CRON_PROJECTS[$((del-1))]"
-            CRON_PROJECTS=("${CRON_PROJECTS[@]}")
-            save_cron_projects
-            reload_cron
-            echo "  削除しました"
-            sleep 1
-            ;;
+              echo -n "  番号: "
+              read -r psel
+              if [[ ! "$psel" =~ ^[0-9]+$ ]] || [ "$psel" -lt 1 ] || [ "$psel" -gt "$TOTAL_PROJECTS" ]; then
+                echo "  不正な入力です"; sleep 1; continue
+              fi
+              selected_project="${PROJECT_LIST[$((psel-1))]}"
+              # 選択した全曜日にプロジェクトを登録
+              for d in "${dow_list[@]}"; do
+                new_entry="${d}=${selected_project}"
+                found=false
+                for i in "${!CRON_PROJECTS[@]}"; do
+                  if [[ "${CRON_PROJECTS[$i]}" == "${d}="* ]]; then
+                    CRON_PROJECTS[$i]="$new_entry"
+                    found=true
+                    break
+                  fi
+                done
+                $found || CRON_PROJECTS+=("$new_entry")
+              done
+              save_cron_projects
+              reload_cron
+              # 曜日名表示用
+              dow_labels=""
+              for d in "${dow_list[@]}"; do
+                dow_labels="${dow_labels}${DOW_NAMES[$d]} "
+              done
+              echo "  登録しました: $dow_labels → $selected_project"
+              sleep 1
+              ;;
           3)
             echo -n "  全てクリアして単一Cronに戻しますか？ (y/N): "
             read -r c
