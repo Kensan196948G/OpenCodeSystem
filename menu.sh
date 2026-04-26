@@ -117,11 +117,35 @@ while true; do
       ;;
     4)
       echo ""
-      echo "--- Cron 登録一覧 ---"
-      crontab -l 2>/dev/null | grep "cron_start.sh\|cron_stop.sh" || echo "  (OpenCodeSystem の登録なし)"
+      echo "=============================================="
+      echo "  Cron 登録一覧"
+      echo "=============================================="
       echo ""
-      echo "--- 全Cron一覧 ---"
-      crontab -l 2>/dev/null || echo "  (Cron登録なし)"
+      echo "  ◆ OpenCodeSystem"
+      echo "  ────────────────────────────────────────────"
+      crontab -l 2>/dev/null | grep "cron_start.sh" | while read -r line; do
+        min=$(echo "$line" | awk '{print $1}')
+        hour=$(echo "$line" | awk '{print $2}')
+        dow=$(echo "$line" | awk '{print $5}')
+        echo "  起動: ${hour}:${min}  ($(dow_label "$dow"))"
+      done
+      crontab -l 2>/dev/null | grep "cron_stop.sh" | while read -r line; do
+        min=$(echo "$line" | awk '{print $1}')
+        hour=$(echo "$line" | awk '{print $2}')
+        dow=$(echo "$line" | awk '{print $5}')
+        echo "  停止: ${hour}:${min}  ($(dow_label "$dow"))"
+      done
+      [ -z "$(crontab -l 2>/dev/null | grep "cron_start.sh")" ] && echo "  (登録なし)"
+      echo ""
+      echo "  ◆ その他 登録済みCron"
+      echo "  ────────────────────────────────────────────"
+      crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | while read -r line; do
+        [ -z "$line" ] && continue
+        echo "  $line"
+      done
+      [ -z "$(crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | grep -v '^$')" ] && echo "  (なし)"
+      echo ""
+      echo "=============================================="
       echo -n "Enter で戻る..."; read -r
       ;;
     5)
