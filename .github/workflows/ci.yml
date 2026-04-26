@@ -10,15 +10,51 @@ on:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
-  basic-check:
+  shellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+          ignore: agents
 
-      - name: Show files
-        run: ls -la
+  structure-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify directory structure
+        run: |
+          errors=0
+          for f in launcher.sh loop.sh orchestrator.sh config.sh selector.sh; do
+            if [ ! -f "$f" ]; then echo "Missing: $f"; errors=$((errors+1)); fi
+          done
+          for f in scripts/cron_start.sh scripts/cron_stop.sh scripts/project_selector.sh; do
+            if [ ! -f "$f" ]; then echo "Missing: $f"; errors=$((errors+1)); fi
+          done
+          for f in config/project.conf state/state.json; do
+            if [ ! -f "$f" ]; then echo "Missing: $f"; errors=$((errors+1)); fi
+          done
+          if [ "$errors" -gt 0 ]; then exit 1; fi
+          echo "All required files exist"
 
-      - name: Placeholder test
-        run: echo "CI OK"
+  bash-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check bash syntax
+        run: |
+          errors=0
+          while IFS= read -r f; do
+            if ! bash -n "$f" 2>/dev/null; then
+              echo "Syntax error: $f"
+              errors=$((errors+1))
+            fi
+          done < <(find . -name '*.sh' -not -path './agents/*' -not -path './.git/*')
+          if [ "$errors" -gt 0 ]; then exit 1; fi
+          echo "All bash scripts syntax OK"

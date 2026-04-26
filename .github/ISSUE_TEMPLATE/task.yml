@@ -1,0 +1,28 @@
+name: Task
+description: 開発タスク
+title: "[Task] "
+labels: [task]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: タスク内容
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: 対応フェーズ
+      options:
+        - Monitor
+        - Plan
+        - Dev
+        - QA
+        - Test
+        - Fix
+        - GitHub/PR
+  - type: input
+    id: project
+    attributes:
+      label: 対象プロジェクト
+      placeholder: ITIL-Management-System

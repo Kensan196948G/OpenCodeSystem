@@ -1,0 +1,43 @@
+# CodeRabbit Code Review 設定
+# https://docs.coderabbit.ai/configuration
+
+language: ja-JP
+reviews:
+  profile: assertive
+  review_status: true
+  collapse_walkthrough: false
+  path_instructions:
+    - path: "scripts/**/*.sh"
+      instructions: |
+        Bashスクリプトのレビュー基準:
+        1. `set -euo pipefail` が先頭にあるか
+        2. 変数展開は `${VAR:-}` 形式を使用しているか
+        3. `$?` チェックの代わりに `||` ガードを使用しているか
+        4. 絶対パスベースで記述されているか
+        5. エラーメッセージは stderr に出力しているか (`>&2`)
+    - path: "orchestrator.sh"
+      instructions: |
+        Orchestrator のレビュー基準:
+        1. フェーズ遷移が正しいか
+        2. モデル使い分け (Pro/Flash) が適切か
+        3. 最大リトライ回数の制限が守られているか
+    - path: "launcher.sh"
+      instructions: |
+        Launcher のレビュー基準:
+        1. 環境変数 TARGET_PROJECT の有無で分岐できているか
+        2. state.json の初期化が正しいか
+    - path: "config/*.conf"
+      instructions: |
+        設定ファイルのレビュー基準:
+        1. MODE の値が FIXED/AUTO のいずれかであるか
+        2. PROJECT のパスが存在するか
+
+chat:
+  auto_reply: true
+  level: moderate
+
+secrets:
+  - pattern: "(?:GH_|ghp_|gho_|github_pat_)[A-Za-z0-9_]+"
+    message: "GitHub トークンが検出されました。環境変数を使用してください。"
+  - pattern: "sk-[A-Za-z0-9]+"
+    message: "APIキーが検出されました。環境変数を使用してください。"

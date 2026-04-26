@@ -1,0 +1,38 @@
+name: Bug Report
+description: 不具合報告
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 概要
+      description: 何が起きたか
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 再現手順
+      description: 再現手順を記載
+      placeholder: |
+        1. xxx を実行
+        2. yyy が表示される
+        3. zzz になる
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作
+  - type: dropdown
+    id: phase
+    attributes:
+      label: 発生フェーズ
+      options:
+        - Monitor
+        - Plan
+        - Dev
+        - QA
+        - Test
+        - Fix
+        - GitHub/PR
+        - Cron

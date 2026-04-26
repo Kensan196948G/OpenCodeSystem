@@ -1,0 +1,31 @@
+# GitHub Copilot Code Review 設定
+# https://docs.github.com/en/copilot/using-github-copilot
+
+version: 1
+
+# レビュー対象言語
+languages:
+  - shell
+  - yaml
+  - markdown
+  - json
+
+# レビュールール
+rules:
+  # セキュリティ: 秘密情報の埋め込み防止
+  - id: no-secrets
+    pattern: "(?:GH_|ghp_|gho_|github_pat_)[A-Za-z0-9_]+"
+    message: "認証トークンが含まれています。削除してください。"
+    severity: error
+
+  # セキュリティ: APIキー
+  - id: no-api-keys
+    pattern: "(?:api_key|apikey|API_KEY|api-key)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9_]+"
+    message: "APIキーが含まれています。環境変数を使用してください。"
+    severity: error
+
+  # ベストプラクティス: set -e の確認
+  - id: bash-strict-mode
+    pattern: "#!/usr/bin/env bash"
+    hint: "set -euo pipefail を追加してください"
+    severity: warning

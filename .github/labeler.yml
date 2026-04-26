@@ -1,0 +1,23 @@
+# OpenCodeSystem PR/Issue Labeler
+# https://github.com/actions/labeler
+
+# PR labels by path
+"ci":
+  - .github/workflows/*
+  - .github/actions/*
+"scripts":
+  - scripts/**/*
+"config":
+  - config/**/*
+"agents":
+  - agents/**/*
+"docs":
+  - README.md
+  - .github/ISSUE_TEMPLATE/*
+  - .github/PULL_REQUEST_TEMPLATE.md
+"cron":
+  - scripts/cron_*.sh
+  - config/project.conf
+"state/logs":
+  - state/**/*
+  - logs/**/*
