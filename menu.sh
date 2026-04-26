@@ -285,44 +285,25 @@ while true; do
         read -r sub
         case "$sub" in
           1)
-            echo "  曜日を選択:"
-            echo "    1=月 2=火 3=水 4=木 5=金 6=土"
-            echo -n "  番号: "
-            read -r dow_num
-            [ "$dow_num" -lt 1 ] || [ "$dow_num" -gt 6 ] && echo "  不正"; sleep 1; continue
-            PROJECT_LIST=(); TOTAL_PROJECTS=0
-            echo "  プロジェクト:"
-            list_projects
-            [ "$TOTAL_PROJECTS" -eq 0 ] && sleep 1; continue
-            echo -n "  番号: "
-            read -r psel
-            [ "$psel" -lt 1 ] || [ "$psel" -gt "$TOTAL_PROJECTS" ] && echo "  不正"; sleep 1; continue
-            # 同じ曜日の既存登録があれば上書き
-            local new_entry="${dow_num}=${PROJECT_LIST[$((psel-1))]}"
-            local found=false
-            for i in "${!CRON_PROJECTS[@]}"; do
-              if [[ "${CRON_PROJECTS[$i]}" == "${dow_num}="* ]]; then
-                CRON_PROJECTS[$i]="$new_entry"
-                found=true
-                break
-              fi
-            done
-            $found || CRON_PROJECTS+=("$new_entry")
-            save_cron_projects
-            reload_cron
-            echo "  登録しました: ${DOW_NAMES[$dow_num]}曜日 → ${PROJECT_LIST[$((psel-1))]}"
-            sleep 1
-            ;;
-          2)
-            [ ${#CRON_PROJECTS[@]} -eq 0 ] && echo "  登録なし"; sleep 1; continue
-            echo "  削除する番号を選択:"
-            for i in "${!CRON_PROJECTS[@]}"; do
-              IFS='=' read -r dow proj <<< "${CRON_PROJECTS[$i]}"
-              echo "    $((i+1))) ${DOW_NAMES[$dow]}曜日 → $proj"
-            done
-            echo -n "  番号: "
-            read -r del
-            [ "$del" -lt 1 ] || [ "$del" -gt "${#CRON_PROJECTS[@]}" ] && echo "  不正"; sleep 1; continue
+             echo "  曜日を選択:"
+             echo "    1=月 2=火 3=水 4=木 5=金 6=土"
+             echo -n "  番号: "
+             read -r dow_num
+             if [[ ! "$dow_num" =~ ^[1-6]$ ]]; then
+               echo "  不正な入力です (1-6)"
+               sleep 1; continue
+             fi
+             PROJECT_LIST=(); TOTAL_PROJECTS=0
+             echo "  プロジェクト:"
+             list_projects
+             if [ "$TOTAL_PROJECTS" -eq 0 ]; then
+               sleep 1; continue
+             fi
+             echo -n "  番号: "
+             read -r del
+             if [[ ! "$del" =~ ^[0-9]+$ ]] || [ "$del" -lt 1 ] || [ "$del" -gt "${#CRON_PROJECTS[@]}" ]; then
+               echo "  不正な入力です"; sleep 1; continue
+             fi
             unset "CRON_PROJECTS[$((del-1))]"
             CRON_PROJECTS=("${CRON_PROJECTS[@]}")
             save_cron_projects
