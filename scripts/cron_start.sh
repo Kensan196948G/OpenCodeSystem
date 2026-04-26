@@ -38,11 +38,23 @@ if [ -f "$PID_FILE" ]; then
   fi
 fi
 
-# プロジェクト選択（set -e 対策で || ガード）
-PROJECT=$(bash "$OPENCODE_SYSTEM/scripts/project_selector.sh") || {
-  log "Error: プロジェクト選択に失敗しました"
-  exit 1
-}
+# プロジェクト選択
+# 引数でプロジェクト指定がある場合はそれを使用
+if [ $# -ge 1 ] && [ -n "$1" ]; then
+  PROJECT="$1"
+  log "引数でプロジェクト指定: $PROJECT"
+  # プロジェクト存在確認
+  PROJECT_PATH="$OPENCODE_SYSTEM/../Projects/$PROJECT"
+  if [ ! -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT" ]; then
+    log "Error: プロジェクト '$PROJECT' が見つかりません"
+    exit 1
+  fi
+else
+  PROJECT=$(bash "$OPENCODE_SYSTEM/scripts/project_selector.sh") || {
+    log "Error: プロジェクト選択に失敗しました"
+    exit 1
+  }
+fi
 
 export TARGET_PROJECT="$PROJECT"
 log "選択プロジェクト: $TARGET_PROJECT"
