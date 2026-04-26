@@ -81,20 +81,21 @@ while true; do
   echo "    3) 手動停止（cron_stop.sh）"
   echo ""
   echo "  [Cron 設定]"
-  echo "    4) Cron 有効/無効 切り替え"
-  echo "    5) 起動時刻 変更"
-  echo "    6) 停止時刻 変更"
-  echo "    7) 稼働曜日 変更"
-  echo "    8) Cron設定 削除"
+  echo "    4) 登録一覧 表示"
+  echo "    5) Cron 有効/無効 切り替え"
+  echo "    6) 起動時刻 変更"
+  echo "    7) 停止時刻 変更"
+  echo "    8) 稼働曜日 変更"
+  echo "    9) Cron設定 削除"
   echo ""
   echo "  [プロジェクト設定]"
-  echo "    9)  プロジェクト 変更"
-  echo "    10) プロジェクト一覧 表示"
+  echo "    10) プロジェクト 変更"
+  echo "    11) プロジェクト一覧 表示"
   echo ""
   echo "  [情報]"
-  echo "    11) 状態確認（PID / ログ / systemd）"
-  echo "    12) 最新ログ 表示"
-  echo "    13) state.json 表示"
+  echo "    12) 状態確認（PID / ログ / systemd）"
+  echo "    13) 最新ログ 表示"
+  echo "    14) state.json 表示"
   echo ""
   echo "  0) 終了"
   echo "=============================================="
@@ -115,6 +116,15 @@ while true; do
       sleep 2
       ;;
     4)
+      echo ""
+      echo "--- Cron 登録一覧 ---"
+      crontab -l 2>/dev/null | grep "cron_start.sh\|cron_stop.sh" || echo "  (OpenCodeSystem の登録なし)"
+      echo ""
+      echo "--- 全Cron一覧 ---"
+      crontab -l 2>/dev/null || echo "  (Cron登録なし)"
+      echo -n "Enter で戻る..."; read -r
+      ;;
+    5)
       if $CRON_ENABLED; then
         crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | crontab -
         CRON_ENABLED=false; CRON_START=""; CRON_STOP=""
@@ -125,7 +135,7 @@ while true; do
       fi
       sleep 1
       ;;
-    5)
+    6)
       echo -n "起動時刻 (HH:MM, 例: 08:30): "
       read -r t
       if [[ "$t" =~ ^([0-9]{2}):([0-9]{2})$ ]]; then
@@ -134,7 +144,7 @@ while true; do
       else echo "不正な形式"; fi
       sleep 1
       ;;
-    6)
+    7)
       echo -n "停止時刻 (HH:MM, 例: 16:30): "
       read -r t
       if [[ "$t" =~ ^([0-9]{2}):([0-9]{2})$ ]]; then
@@ -143,14 +153,14 @@ while true; do
       else echo "不正な形式"; fi
       sleep 1
       ;;
-    7)
+    8)
       echo "  1) 月-土  2) 月-金  3) 毎日  4) 月水金  5) 火木土"
       echo -n "番号: "; read -r d
       case "$d" in 1) START_DOW="1-6";; 2) START_DOW="1-5";; 3) START_DOW="*";; 4) START_DOW="1,3,5";; 5) START_DOW="2,4,6";; *) sleep 1; continue;; esac
       STOP_DOW="$START_DOW"; reload_cron; echo "変更しました"
       sleep 1
       ;;
-    8)
+    9)
       echo -n "Cron設定を全て削除しますか？ (y/N): "
       read -r c
       if [ "$c" = "y" ] || [ "$c" = "Y" ]; then
@@ -160,7 +170,7 @@ while true; do
       fi
       sleep 1
       ;;
-    9)
+    10)
       echo "  1) FIXED（固定） 2) AUTO（自動） 3) 一覧から選択"
       echo -n "番号: "; read -r pm
       case "$pm" in
@@ -190,7 +200,7 @@ while true; do
       echo "PROJECT=$PROJECT" >> "$CONFIG_FILE"
       sleep 1
       ;;
-    10)
+     11)
       echo ""
       echo "--- 利用可能なプロジェクト ---"
       for dir in /home/kensan/Projects/*/; do
@@ -199,7 +209,7 @@ while true; do
       done
       echo -n "Enter で戻る..."; read -r
       ;;
-    11)
+     12)
       echo ""
       echo "--- 状態 ---"
       if is_running; then
@@ -224,7 +234,7 @@ while true; do
       tail -5 "$LOG_DIR/cron.log" 2>/dev/null || echo "  (ログなし)"
       echo -n "Enter で戻る..."; read -r
       ;;
-    12)
+     13)
       echo ""
       echo "ログを選択:"
       echo "  1) cron.log  2) start.log  3) stop.log"
@@ -237,7 +247,7 @@ while true; do
       tail -20 "$LOG_DIR/$f" 2>/dev/null || echo "(ログなし)"
       echo -n "Enter で戻る..."; read -r
       ;;
-    13)
+     14)
       echo ""
       cat "$STATE_FILE" 2>/dev/null | jq . 2>/dev/null || echo "(state.json なし)"
       echo -n "Enter で戻る..."; read -r
