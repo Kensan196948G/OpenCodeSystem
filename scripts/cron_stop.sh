@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cron停止: OpenCodeSystem を強制停止
+# Cron停止: OpenCodeSystem を systemd 経由で強制停止
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,6 +18,28 @@ log() {
 
 log "=== Cron停止開始 ==="
 
+UNIT="opencode-run"
+
+# 状態更新
+echo "$(cat "$OPENCODE_SYSTEM/state/state.json" 2>/dev/null || echo '{}')" | \
+  jq --arg v "stopped" '.status = $v' > "$OPENCODE_SYSTEM/state/state.json" 2>/dev/null || true
+
+# 方法1: systemd による停止（優先）
+if systemctl --user is-active "$UNIT" > /dev/null 2>&1; then
+  log "systemd unit $UNIT を停止します"
+  systemctl --user stop "$UNIT" 2>/dev/null || true
+  sleep 3
+
+  if ! systemctl --user is-active "$UNIT" > /dev/null 2>&1; then
+    log "systemd 停止完了: $UNIT"
+    rm -f "$PID_FILE"
+    exit 0
+  else
+    log "systemd 停止失敗。kill にフォールバックします。"
+  fi
+fi
+
+# 方法2: PID ファイルによる kill（フォールバック）
 if [ ! -f "$PID_FILE" ]; then
   log "PIDファイルが見つかりません。実行中プロセスはありません。"
   exit 0
@@ -36,10 +58,6 @@ if ! ps -p "$PID" > /dev/null 2>&1; then
   rm -f "$PID_FILE"
   exit 0
 fi
-
-# 状態更新
-echo "$(cat "$OPENCODE_SYSTEM/state/state.json" 2>/dev/null || echo '{}')" | \
-  jq --arg v "stopped" '.status = $v' > "$OPENCODE_SYSTEM/state/state.json" 2>/dev/null || true
 
 # 2段階停止: SIGTERM → SIGKILL
 log "停止シグナル送信: kill $PID"
