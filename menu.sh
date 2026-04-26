@@ -127,7 +127,7 @@ while true; do
         m=$(echo "$line" | awk '{print $1}')
         h=$(echo "$line" | awk '{print $2}')
         d=$(echo "$line" | awk '{print $5}')
-        printf "    %-7s %s:%s  (%s)\n" "▶ 起動" "$h" "$m" "$(dow_label "$d")"
+        printf "    %-7s %s:%s  (%s)  [%s] %s\n" "▶ 起動" "$h" "$m" "$(dow_label "$d")" "$MODE" "${PROJECT:-自動}"
       done
       crontab -l 2>/dev/null | grep "cron_stop.sh" | while read -r line; do
         m=$(echo "$line" | awk '{print $1}')
