@@ -132,7 +132,8 @@ while true; do
   echo "  6) Cron設定 削除"
   echo "  7) 手動起動 (テスト)"
   echo "  8) 手動停止 (テスト)"
-  echo "  9) 状態確認"
+  echo "  9) launcher.sh 実行（プロジェクト選択あり）"
+  echo "  10) 状態確認"
   echo "  0) 終了"
   echo "=============================================="
   echo -n "番号を入力: "
@@ -272,6 +273,14 @@ while true; do
       sleep 2
       ;;
     9)
+      echo "launcher.sh を実行します（プロジェクト選択画面あり）"
+      echo "Ctrl+C で中断可能"
+      sleep 1
+      bash "$SCRIPT_DIR/launcher.sh" || echo "launcher.sh が終了しました (コード: $?)"
+      echo -n "Enter で戻る..."
+      read -r
+      ;;
+    10)
       echo ""
       echo "--- 状態 ---"
       if [ -f "$PID_FILE" ]; then
