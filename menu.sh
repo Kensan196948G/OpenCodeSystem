@@ -117,35 +117,56 @@ while true; do
       ;;
     4)
       echo ""
-      echo "=============================================="
-      echo "  Cron 登録一覧"
-      echo "=============================================="
+      echo "╔══════════════════════════════════════════════════════════╗"
+      echo "║                 Cron 登録一覧                           ║"
+      echo "╚══════════════════════════════════════════════════════════╝"
       echo ""
       echo "  ◆ OpenCodeSystem"
-      echo "  ────────────────────────────────────────────"
+      echo "  ────────────────────────────────────────────────────────"
       crontab -l 2>/dev/null | grep "cron_start.sh" | while read -r line; do
-        min=$(echo "$line" | awk '{print $1}')
-        hour=$(echo "$line" | awk '{print $2}')
-        dow=$(echo "$line" | awk '{print $5}')
-        echo "  起動: ${hour}:${min}  ($(dow_label "$dow"))"
+        m=$(echo "$line" | awk '{print $1}')
+        h=$(echo "$line" | awk '{print $2}')
+        d=$(echo "$line" | awk '{print $5}')
+        printf "    %-7s %s:%s  (%s)\n" "▶ 起動" "$h" "$m" "$(dow_label "$d")"
       done
       crontab -l 2>/dev/null | grep "cron_stop.sh" | while read -r line; do
-        min=$(echo "$line" | awk '{print $1}')
-        hour=$(echo "$line" | awk '{print $2}')
-        dow=$(echo "$line" | awk '{print $5}')
-        echo "  停止: ${hour}:${min}  ($(dow_label "$dow"))"
+        m=$(echo "$line" | awk '{print $1}')
+        h=$(echo "$line" | awk '{print $2}')
+        d=$(echo "$line" | awk '{print $5}')
+        printf "    %-7s %s:%s  (%s)\n" "■ 停止" "$h" "$m" "$(dow_label "$d")"
       done
-      [ -z "$(crontab -l 2>/dev/null | grep "cron_start.sh")" ] && echo "  (登録なし)"
+      [ -z "$(crontab -l 2>/dev/null | grep "cron_start.sh")" ] && echo "    (登録なし)"
       echo ""
-      echo "  ◆ その他 登録済みCron"
-      echo "  ────────────────────────────────────────────"
-      crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | while read -r line; do
+      echo "  ◆ その他 Cronジョブ"
+      echo "  ────────────────────────────────────────────────────────"
+      echo ""
+      crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | grep -v '^#' | grep -v '^$' | while read -r line; do
         [ -z "$line" ] && continue
-        echo "  $line"
+        m=$(echo "$line" | awk '{print $1}')
+        h=$(echo "$line" | awk '{print $2}')
+        d=$(echo "$line" | awk '{print $3}')
+        dm=$(echo "$line" | awk '{print $4}')
+        dw=$(echo "$line" | awk '{print $5}')
+        cmd=$(echo "$line" | cut -d' ' -f6-)
+        sched=""
+        if [ "$m" != "*" ]; then sched="${m}分 "; fi
+        if [ "$h" != "*" ]; then sched="${sched}${h}時"; fi
+        [ -z "$sched" ] && sched="毎分"
+        sched=$(echo "$sched" | xargs)
+        printf "    %-12s %s\n" "$sched" "${cmd:0:70}"
       done
-      [ -z "$(crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | grep -v '^$')" ] && echo "  (なし)"
+      [ -z "$(crontab -l 2>/dev/null | grep -v "cron_start.sh\|cron_stop.sh" | grep -v '^#' | grep -v '^$')" ] && echo "    ジョブなし"
       echo ""
-      echo "=============================================="
+      echo "  ◆ コメント行"
+      echo "  ────────────────────────────────────────────────────────"
+      crontab -l 2>/dev/null | grep '^#' | while read -r line; do
+        echo "    $line"
+      done
+      [ -z "$(crontab -l 2>/dev/null | grep '^#')" ] && echo "    (なし)"
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════╗"
+      echo "║ 凡例:  ▶ 実行中  ■ 停止中                             ║"
+      echo "╚══════════════════════════════════════════════════════════╝"
       echo -n "Enter で戻る..."; read -r
       ;;
     5)
